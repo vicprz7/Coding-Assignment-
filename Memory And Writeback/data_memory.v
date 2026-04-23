@@ -23,7 +23,7 @@ module data_memory(
     // asynchronous read
     always @(*) begin
         if (memread)
-            read_data = DMEM[addr[31:2]];
+            read_data = DMEM[addr];
         else
             read_data = 32'b0;
     end
@@ -31,7 +31,7 @@ module data_memory(
     // synchronous write
     always @(posedge clk) begin
         if (memwrite)
-            DMEM[addr[31:2]] <= write_data;
+            DMEM[addr] <= write_data;
     end
 
 endmodule
