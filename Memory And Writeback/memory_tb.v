@@ -46,7 +46,8 @@ module memory_tb();
 
     initial begin
         // -------- CASE 1: LOAD-LIKE TEST --------
-        ALUResult = 32'h00000010;
+        // Address 0x10 = decimal 16 -> DMEM[4] when using addr[31:2]
+        ALUResult = 32'h00000004;
         WriteData = 32'h12345678;
         WriteReg  = 5'd2;
         WBControl = 2'b11;   // RegWrite=1, MemtoReg=1
@@ -58,7 +59,7 @@ module memory_tb();
         @(negedge clk);
 
         // -------- CASE 2: STORE TEST --------
-        // Write 0x12345678 into DMEM[4]
+        //
         MemWrite = 1;
         MemRead  = 0;
 
@@ -82,7 +83,7 @@ module memory_tb();
         Zero      = 0;
         MemWrite  = 0;
         MemRead   = 0;
-        ALUResult = 32'h00000020;
+        ALUResult = 32'h00000005;
         WriteReg  = 5'd3;
         WBControl = 2'b10;   // RegWrite=1, MemtoReg=0
 
