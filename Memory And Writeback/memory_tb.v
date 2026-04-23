@@ -7,10 +7,12 @@ module memory_tb();
     reg [1:0] WBControl;
     reg MemWrite, MemRead, Branch, Zero;
 
-    wire [31:0] ReadData, ALUResult_out;
-    wire [4:0] WriteReg_out;
+    wire [31:0] ReadData;
+    wire [31:0] ALUResult_out;
+    wire [4:0]  WriteReg_out;
     wire RegWrite_out, MemtoReg_out;
     wire PCSrc;
+    wire [31:0] WriteBackData;
 
     mem_stage uut (
         .clk(clk),
@@ -30,40 +32,63 @@ module memory_tb();
         .mem_write_reg(WriteReg_out)
     );
 
+    wb_mux wb_mux_uut (
+        .memtoreg(MemtoReg_out),
+        .read_data(ReadData),
+        .mem_alu_result(ALUResult_out),
+        .writeback_data(WriteBackData)
+    );
+
     initial begin
         clk = 0;
         forever #5 clk = ~clk;
     end
 
     initial begin
-        // Initial values
-        ALUResult = 32'h00000010;   // address 4
+        // -------- CASE 1: LOAD-LIKE TEST --------
+        ALUResult = 32'h00000010;
         WriteData = 32'h12345678;
-        WriteReg  = 5'h02;
-        WBControl = 2'b11;          // RegWrite=0, MemtoReg=1 with your current bit mapping
+        WriteReg  = 5'd2;
+        WBControl = 2'b11;   // RegWrite=1, MemtoReg=1
         MemWrite  = 0;
         MemRead   = 1;
         Branch    = 0;
         Zero      = 0;
 
-        #10;
+        @(negedge clk);
 
-        // Mem Write
+        // -------- CASE 2: STORE TEST --------
+        // Write 0x12345678 into DMEM[4]
         MemWrite = 1;
         MemRead  = 0;
-        #10;
 
-        // Read back written value
+        @(negedge clk);
+
+        // -------- CASE 3: READ BACK --------
         MemWrite = 0;
         MemRead  = 1;
-        #10;
 
-        // Branch test
+        @(negedge clk);
+
+        // -------- CASE 4: BRANCH TAKEN --------
         Branch = 1;
         Zero   = 1;
-        #10;
+
+        @(negedge clk);
+
+        // -------- CASE 5: ALU WRITEBACK TEST --------
+        // Now test WB mux selecting ALU result instead of memory
+        Branch    = 0;
+        Zero      = 0;
+        MemWrite  = 0;
+        MemRead   = 0;
+        ALUResult = 32'h00000020;
+        WriteReg  = 5'd3;
+        WBControl = 2'b10;   // RegWrite=1, MemtoReg=0
+
+        @(negedge clk);
 
         $finish;
     end
-endmodule
 
+endmodule
